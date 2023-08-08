@@ -18,7 +18,7 @@ BLOCKSIZEPROCESSING = "500MB"
 
 class DBConstructor():
     """
-    A classe DBConstructor realiza o download, extração e tratamento em SQLITE de todos os arquivos relacionados
+    A classe DBConstructor realiza o download, extração e transferência para SQLITE de todos os arquivos relacionados
     dos dados abertos de CNPJs do Brasil.
     https://dados.gov.br/dados/conjuntos-dados/cadastro-nacional-da-pessoa-juridica---cnpj
     """
@@ -40,7 +40,7 @@ class DBConstructor():
             
     def extractfiles(self):
         """
-        Os dados baixados pelo método downloadfiles são extraidos utilizando a biblioteca zipfile.
+        Os dados baixados são extraidos utilizando a biblioteca zipfile.
         Todos os arquivos extraidos são nomeados conforme as necessidades da classe e movidos para a raiz do código.
         Os arquivos compactados são apagados.
         """
@@ -94,7 +94,7 @@ class DBConstructor():
     def creatdb(self): 
         """
         Essa função cria um banco de dados sqlite a partir dos CSVs coletados. Os arquivos manipulados neste método tem tamanho expressivo,
-        podem ocorrer erros de memória em computadores de baixa performance.
+        podem ocorrer erros de memória em computadores de baixa performance. Caso seja necessário, pode-se editar a variável BLOCKSIZEPROCESSING.
         """
         # conectando ao banco de dados
         dbname = "cnpjinfos.db"
@@ -102,7 +102,7 @@ class DBConstructor():
             os.remove(dbname)
         conn = sqlite3.connect(dbname)
 
-        # Definindo tipos, criando tabelas e adicionado dados na tabela utilizando pandas.
+        # Definindo tipos, criando tabelas e adicionado dados na tabela utilizando dask.
         for file in os.listdir():
             print(file)
             if 'empresas' in file:
@@ -230,12 +230,11 @@ class DBConstructor():
                                  dtype=str, low_memory=False, blocksize=BLOCKSIZEPROCESSING)
                 df.compute().to_sql('MOTIVOS', conn, if_exists='append', index=False)
 
-        # Encerrando o conector
         conn.close()
 
     def update(self):
         """
-        Reinicia a base de dados.
+        Atualiza a base de dados com base em novos arquivos disponibilizados nos dados abertos.
         """
         for file in os.listdir():
             if ('csv' in file) or ('.db' in file):
